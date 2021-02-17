@@ -1,0 +1,1 @@
+alert($("#timesheet-data-island").text());
