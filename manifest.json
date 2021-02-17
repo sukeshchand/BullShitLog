@@ -2,7 +2,7 @@
     "name": "Bullshit log",
     "version": "1.0",
     "description": "get rid of bullshit logging",
-    "permissions": ["activeTab", "declarativeContent", "storage"],
+    "permissions": ["activeTab", "declarativeContent", "storage", "tabs"],
      "background": {
         "scripts": ["background.js"],
         "persistent": false

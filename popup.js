@@ -1,13 +1,9 @@
 let changeColor = document.getElementById('changeColor');
 
 changeColor.onclick = function(element) {
-  let color = element.target.value;
-  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-    chrome.tabs.executeScript(
-        tabs[0].id,
-        {code: 'document.body.style.backgroundColor = "' + color + '";'});
-    chrome.tabs.executeScript(
-            tabs[0].id,
-            {code: 'alert("testttt");'});
-  });
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        var data = {greeting: "hello"};
+        alert("Send: " + data.greeting);
+        chrome.tabs.sendMessage(tabs[0].id, data);
+      });
 };
