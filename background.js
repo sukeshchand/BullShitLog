@@ -18,3 +18,8 @@ chrome.runtime.onInstalled.addListener(function() {
 
 
 });
+
+
+
+
+Object.defineProperty(document, "referrer", {get : function(){ return "https://pmt.bridge-global.com/hoursheet/index.php?page=register"; }});

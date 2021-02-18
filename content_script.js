@@ -2,7 +2,7 @@ var showContent = function() {
     alert($("#timesheet-data-island").text());
 }
 
-var updateLog = function(){
+var updateLog = function(cookieString, date, user, projectId, hours, logData){
     fetch("https://pmt.bridge-global.com/hoursheet/index.php?page=register", {
         "headers": {
           "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
@@ -15,11 +15,11 @@ var updateLog = function(){
           "sec-fetch-site": "same-origin",
           "sec-fetch-user": "?1",
           "upgrade-insecure-requests": "1",
-          "cookie": "_ga=GA1.2.275131777.1559027218; _hjid=31350165-8551-40df-96c0-833f54cd3526; login=sukesh; password=866df69a6f04190b5310a44bdf761808; id_user=809; status_id=37; PHPSESSID=iluqg171gq6h5id65o509aua26; ip=122.174.7.1"
+          "cookie": cookieString
         },
         "referrer": "https://pmt.bridge-global.com/hoursheet/index.php?page=register",
         "referrerPolicy": "strict-origin-when-cross-origin",
-        "body": "pdate1=15-02-2021&status=block&user_name=809&reg_id=&project=1023&activity=IM&hours=8&desc=Retainer+India+2021+%28Mr+Green%29%0D%0ASystemutveckling%E2%80%93%0D%0APDF+generation+-+base+task&button=Submit",
+        "body": "pdate1="+ date +"&status=block&user_name=" + user + "&reg_id=&project="  + projectId +  "&activity=IM&hours="+ hours +"&desc=" + logData + "&button=Submit",
         "method": "POST",
         "mode": "cors"
       });
@@ -33,74 +33,50 @@ function getCookies(domain, name, callback) {
     });
 }
 
-chrome.runtime.onMessage.addListener (function(request, sender, sendResponse) {
-    showContent();
-    chrome.cookies.getAll({
-        domain: ".bridge-global.com"
-      }, function (cookies) {
-        for (var i = 0; i < cookies.length; i++) {
-          console.log(cookies[i]);
-   //       chrome.cookies.remove({
-    //        url: "https://" + cookies[i].domain + cookies[i].path,
-     //       name: cookies[i].name
-      //    });
-        }
-      });
+chrome.runtime.onMessage.addListener (function(response, sender) {
+    debugger;
+    var cookieObj = response.cookies;
+    var cookieString = "_ga=" + getCookieValue(cookieObj, '_ga') + "; _hjid=" + getCookieValue(cookieObj,'_hjid') + "; login=" + getCookieValue(cookieObj,'login') + "; password=" + getCookieValue(cookieObj,'password') + "; id_user=" + getCookieValue(cookieObj,'id_user') + "; status_id=" + getCookieValue(cookieObj,'status_id') + "; PHPSESSID=" + getCookieValue(cookieObj,'PHPSESSID') + "; ip=" + getCookieValue(cookieObj,'ip') + "";
+    var user = getCookieValue(cookieObj,'id_user');
+    var data = JSON.parse($("#timesheet-data-island").text())
+    location.href = "https://pmt.bridge-global.com/hoursheet/index.php?page=register";
+    for(var i = 0; i< data.day_entries.length; i++){
+      var logData = data.day_entries[i].client_name + ' - '  + data.day_entries[i].project_name + ' - ' + data.day_entries[i].notes;
+      updateLog(cookieString, data.day_entries[i].spent_at, user, 1023, data.day_entries[i].hours, logData);
+    }
+    alert('data updated');
+    window.open("https://pmt.bridge-global.com/hoursheet/index.php?page=register");
+    //showContent();
 });
 
 
-  // An object used for caching data about the browser's cookies, which we update
-  // as notifications come in.
-  function CookieCache() {
-    this.cookies_ = {};
-  
-    this.reset = function() {
-      this.cookies_ = {};
-    }
-  
-    this.add = function(cookie) {
-      var domain = cookie.domain;
-      if (!this.cookies_[domain]) {
-        this.cookies_[domain] = [];
+
+function getCookieValue(cookieObj, name){
+  var filterdData = cookieObj.filter(x=>x.name == name);
+  if(filterdData.length == 0) return null;
+  return filterdData[0].value;
+}
+
+chrome.webRequest.onBeforeSendHeaders.addEventListener(function(details){
+  debugger;
+  var newRef = "https://pmt.bridge-global.com/hoursheet/index.php?page=register";
+  var hasRef = false;
+  for(var n in details.requestHeaders){
+      hasRef = details.requestHeaders[n].name == "Referer";
+      if(hasRef){
+          details.requestHeaders[n].value = newRef;
+       break;
       }
-      this.cookies_[domain].push(cookie);
-    };
-  
-    this.remove = function(cookie) {
-      var domain = cookie.domain;
-      if (this.cookies_[domain]) {
-        var i = 0;
-        while (i < this.cookies_[domain].length) {
-          if (cookieMatch(this.cookies_[domain][i], cookie)) {
-            this.cookies_[domain].splice(i, 1);
-          } else {
-            i++;
-          }
-        }
-        if (this.cookies_[domain].length == 0) {
-          delete this.cookies_[domain];
-        }
-      }
-    };
-  
-    // Returns a sorted list of cookie domains that match |filter|. If |filter| is
-    //  null, returns all domains.
-    this.getDomains = function(filter) {
-      var result = [];
-      sortedKeys(this.cookies_).forEach(function(domain) {
-        if (!filter || domain.indexOf(filter) != -1) {
-          result.push(domain);
-        }
-      });
-      return result;
-    }
-  
-    this.getCookies = function(domain) {
-      return this.cookies_[domain];
-    };
   }
-  
-  
-
-  
-
+  if(!hasRef){
+      details.requestHeaders.push({name:"Referer",value:newRef});
+  }
+  return {requestHeaders:details.requestHeaders};
+},
+{
+  urls: ["<all_urls>"],
+},
+[
+  "requestHeaders",
+  "blocking"
+]);
