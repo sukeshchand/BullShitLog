@@ -1,14 +1,13 @@
-let changeColor = document.getElementById('changeColor');
+let btnHarvestToPMT = document.getElementById('btnHarvestToPMT');
 
-changeColor.onclick = function(element) {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        chrome.cookies.getAll({
-            domain: ".bridge-global.com"
-          }, function (cookies) {
-            var data = {cookies: cookies};
-            chrome.tabs.sendMessage(tabs[0].id, data);
-          });
-      });
+btnHarvestToPMT.onclick = function (element) {
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    chrome.tabs.sendMessage(tabs[0].id, {page : "harvest"});
+  });
 };
+
+
+
+
 
 
